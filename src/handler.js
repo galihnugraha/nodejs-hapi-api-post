@@ -3,6 +3,7 @@ const { nanoid } = require('nanoid');
 const notes = require('./notes');
 
 const findNoteId = (findId) => notes.filter((note) => note.id === findId)[0];
+const findIndexNote = (findId) => notes.findIndex((note) => note.id === findId);
 
 const addNoteHandler = (request, h) => {
   const { title, tags, body } = JSON.parse(request.payload);
@@ -75,7 +76,7 @@ const editNoteByIdHandler = (request, h) => {
 
   const updatedAt = new Date().toISOString();
 
-  const indexEditing = notes.findIndex((note) => note.id === id);
+  const indexEditing = findIndexNote(id);
 
   if (indexEditing !== -1) {
     notes[indexEditing] = {
@@ -102,9 +103,36 @@ const editNoteByIdHandler = (request, h) => {
   return responseFail;
 };
 
+const deleteNoteByIdHandler = (request, h) => {
+  const { id } = request.params;
+
+  const indexDelete = findIndexNote(id);
+
+  if (indexDelete !== -1) {
+    notes.splice(indexDelete, 1);
+
+    const responseSuccess = h.response({
+      status: 'success',
+      message: 'Catatan berhasil dihapus',
+    });
+
+    responseSuccess.code(200);
+    return responseSuccess;
+  }
+
+  const responseFail = h.response({
+    status: 'fail',
+    message: 'Catatan gagal dihapus. Id tidak ditemukan',
+  });
+
+  responseFail.code(404);
+  return responseFail;
+};
+
 module.exports = {
   addNoteHandler,
   getAllNotesHandler,
   getNoteByIdHandler,
   editNoteByIdHandler,
+  deleteNoteByIdHandler,
 };
